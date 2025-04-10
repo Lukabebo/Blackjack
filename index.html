@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Blackjack</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+            background-color: green;
+            color: white;
+        }
+        .card {
+            display: inline-block;
+            width: 50px;
+            height: 70px;
+            border: 1px solid black;
+            border-radius: 5px;
+            background-color: white;
+            color: black;
+            font-size: 20px;
+            font-weight: bold;
+            text-align: center;
+            line-height: 70px;
+            margin: 5px;
+        }
+        .red {
+            color: red;
+        }
+        .black {
+            color: black;
+        }
+    </style>
+    <script>
+        let playerHand = [];
+        let dealerHand = [];
+        let deck = [];
+        let currentBet = 0;
+        let earnings = 0;
+
+        function createDeck() {
+            const suits = ['♠', '♥', '♦', '♣'];
+            const values = ['2', '3', '4', '5', '6', '7', '8', '9', '10', 'J', 'Q', 'K', 'A'];
+            deck = [];
+            for (let suit of suits) {
+                for (let value of values) {
+                    deck.push({ value, suit });
+                }
+            }
+            deck.sort(() => Math.random() - 0.5);
+        }
+
+        function startGame() {
+            createDeck();
+            playerHand = [drawCard(), drawCard()];
+            dealerHand = [drawCard(), drawCard()];
+            updateDisplay();
+            document.getElementById("result").innerText = "";
+        }
+
+        function drawCard() {
+            return deck.pop();
+        }
+
+        function getHandValue(hand) {
+            let value = 0;
+            let aces = 0;
+            for (let card of hand) {
+                if (card.value === 'A') {
+                    value += 11;
+                    aces++;
+                } else if (['J', 'Q', 'K'].includes(card.value)) {
+                    value += 10;
+                } else {
+                    value += parseInt(card.value);
+                }
+            }
+            while (value > 21 && aces > 0) {
+                value -= 10;
+                aces--;
+            }
+            return value;
+        }
+
+        function updateDisplay() {
+            document.getElementById("player-hand").innerHTML = renderHand(playerHand);
+            document.getElementById("dealer-hand").innerHTML = renderHand(dealerHand);
+            document.getElementById("player-value").innerText = `Value: ${getHandValue(playerHand)}`;
+            document.getElementById("dealer-value").innerText = `Value: ${getHandValue(dealerHand)}`;
+        }
+
+        function renderHand(hand) {
+            return hand.map(card => {
+                let colorClass = (card.suit === '♥' || card.suit === '♦') ? 'red' : 'black';
+                return `<div class='card ${colorClass}'>${card.value}${card.suit}</div>`;
+            }).join(" ");
+        }
+
+        function hit() {
+            playerHand.push(drawCard());
+            updateDisplay();
+            if (getHandValue(playerHand) > 21) {
+                document.getElementById("result").innerText = "Bust! You lose.";
+                resetBet();
+            }
+        }
+
+        function stand() {
+            while (getHandValue(dealerHand) < 17) {
+                dealerHand.push(drawCard());
+            }
+            updateDisplay();
+            let playerValue = getHandValue(playerHand);
+            let dealerValue = getHandValue(dealerHand);
+            if (dealerValue > 21 || playerValue > dealerValue) {
+                document.getElementById("result").innerText = "You win!";
+                earnings += currentBet;
+            } else if (playerValue < dealerValue) {
+                document.getElementById("result").innerText = "Dealer wins!";
+                earnings -= currentBet;
+            } else {
+                document.getElementById("result").innerText = "It's a tie!";
+            }
+            resetBet();
+        }
+
+        function placeBet(amount) {
+            currentBet += amount;
+            document.getElementById("current-bet").innerText = currentBet;
+        }
+
+        function resetBet() {
+            currentBet = 0;
+            document.getElementById("current-bet").innerText = currentBet;
+            document.getElementById("earnings").innerText = earnings;
+        }
+    </script>
+</head>
+<body>
+    <h1>Blackjack</h1>
+    <div id="game">
+        <p>Dealer's Hand:</p>
+        <div id="dealer-hand"></div>
+        <p id="dealer-value"></p>
+        <p>Player's Hand:</p>
+        <div id="player-hand"></div>
+        <p id="player-value"></p>
+        <button onclick="hit()">Hit</button>
+        <button onclick="stand()">Stand</button>
+        <button onclick="startGame()">New Hand</button>
+        <p id="result"></p>
+    </div>
+    
+    <div id="bet-options">
+        <button onclick="placeBet(50)" class="bet-button">$50</button>
+        <button onclick="placeBet(100)" class="bet-button">$100</button>
+        <button onclick="placeBet(500)" class="bet-button">$500</button>
+        <button onclick="placeBet(1000)" class="bet-button">$1000</button>
+    </div>
+    
+    <div id="bet-info">
+        <p>Bet: $<span id="current-bet">0</span></p>
+        <p>Earnings: $<span id="earnings">0</span></p>
+    </div>
+</body>
+</html>
+
+
+
+
+
